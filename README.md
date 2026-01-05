@@ -40,6 +40,7 @@ project_page/
 ```bash
 cd /data/lkp/paper/AIgoGen_final/project_page
 python3 -m http.server 8080
+bash start_server.sh
 ```
 
 然后在浏览器中访问: `http://localhost:8080`

@@ -540,7 +540,7 @@
                     <div class="mt-2 md:mt-0">
                         <label class="block text-sm text-gray-400 mb-1">Select Example:</label>
                         <select v-model="selectedSample" @change="loadSample" class="bg-secondary border border-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:border-primary min-w-[250px]">
-                            <option v-for="sample in samples" :value="sample">
+                            <option v-for="sample in filteredSamples" :value="sample">
                                 {{ formatAlgoName(sample) }}
                             </option>
                         </select>
@@ -581,7 +581,7 @@
                             <div class="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur px-3 py-1 rounded shadow text-xs text-black font-serif border border-gray-200">
                                 Paper Figure Preview
                             </div>
-                            <div class="flex-1 overflow-auto p-8 flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNjY2MiIG9wYWNpdHk9IjAuMiIvPjwvc3ZnPg==')]">
+                            <div class="flex-1 overflow-auto p-8 pt-14 flex items-start justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNjY2MiIG9wYWNpdHk9IjAuMiIvPjwvc3ZnPg==')]">
                                 <div class="bg-white shadow-2xl p-2 max-w-full">
                                     <img 
                                         v-if="currentImagePath" 

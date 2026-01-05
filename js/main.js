@@ -26,6 +26,18 @@ createApp({
             { id: 'tikz', label: 'TikZ', badge: 'Paper Figure' }
         ];
 
+        const tikzHiddenTaskIds = new Set([
+            '4__mergesort_tracker',
+            '8__mst_tracker',
+            '7__lcs_tracker'
+        ]);
+
+        const shouldHideSampleInTikz = (sample) => {
+            if (!sample) return false;
+            if (sample.id === 'tree_1717') return true;
+            return tikzHiddenTaskIds.has(sample.task_id);
+        };
+
         const appendCacheBust = (url, version) => {
             if (!version) return url;
             const sep = url.includes('?') ? '&' : '?';
@@ -49,13 +61,18 @@ createApp({
         };
         
         // Renderer instance
-        let renderer = null;
+        const renderer = ref(null);
 
         // Categories
         const categories = ['All', 'array', 'dp', 'graph', 'tree', 'sorting', 'hashtable', 'algorithm_analysis'];
 
         // Computed
         const currentSampleInfo = computed(() => selectedSample.value || {});
+
+        const filteredSamples = computed(() => {
+            if (activeRenderMode.value !== 'tikz') return samples.value;
+            return samples.value.filter(s => !shouldHideSampleInTikz(s));
+        });
 
         const currentRenderDescription = computed(() => {
             switch (activeRenderMode.value) {
@@ -71,6 +88,8 @@ createApp({
         });
         
         const texContent = ref('Loading .tex source...');
+
+        const lastLoadedTrace = ref(null);
         
         const loadTexContent = async () => {
             if (!selectedSample.value || !selectedSample.value.tex_file) {
@@ -93,6 +112,18 @@ createApp({
         watch([selectedSample, activeRenderMode], ([newSample, newMode]) => {
             if (newMode === 'tikz') {
                 loadTexContent();
+            }
+        });
+
+        watch(activeRenderMode, (newMode) => {
+            if (newMode !== 'tikz') return;
+            if (!selectedSample.value) return;
+            if (!shouldHideSampleInTikz(selectedSample.value)) return;
+
+            const next = filteredSamples.value[0] || null;
+            if (next) {
+                selectedSample.value = next;
+                loadSample();
             }
         });
 
@@ -137,12 +168,14 @@ createApp({
             try {
                 const response = await fetch(tracePath);
                 const trace = await response.json();
+
+                lastLoadedTrace.value = trace;
                 
-                if (renderer) {
+                if (renderer.value) {
                     // If renderer exists, just load data
-                    await renderer.loadTrace(trace);
-                } else {
-                    // Initialize renderer if not ready (shouldn't happen if mounted correctly)
+                    await renderer.value.loadTrace(trace);
+                } else if (activeRenderMode.value === 'three') {
+                    // Only init Three.js renderer when the container is visible
                     initRenderer(trace);
                 }
             } catch (e) {
@@ -163,31 +196,59 @@ createApp({
             const container = document.getElementById('three-container');
             container.innerHTML = '';
             
-            renderer = new SVLThreeRenderer('three-container');
+            renderer.value = new SVLThreeRenderer('three-container');
+            // In case the container size was not finalized yet
+            try {
+                renderer.value.onWindowResize();
+            } catch (e) {
+            }
             if (traceData) {
-                renderer.loadTrace(traceData);
+                renderer.value.loadTrace(traceData);
             }
         };
 
         const togglePlay = () => {
-            if (!renderer) return;
+            if (!renderer.value) return;
             if (isPlaying.value) {
-                renderer.pause();
+                renderer.value.pause();
             } else {
-                renderer.play();
+                renderer.value.play();
             }
             isPlaying.value = !isPlaying.value;
         };
 
         const updateSpeed = () => {
-            if (renderer) {
-                renderer.speed = parseFloat(speed.value);
+            if (renderer.value) {
+                renderer.value.speed = parseFloat(speed.value);
             }
         };
 
         const setRenderMode = (mode) => {
             if (activeRenderMode.value === mode) return;
             activeRenderMode.value = mode;
+
+            if (mode === 'three') {
+                nextTick(() => {
+                    if (!renderer.value) {
+                        initRenderer(lastLoadedTrace.value);
+                    } else {
+                        try {
+                            renderer.value.onWindowResize();
+                        } catch (e) {
+                        }
+                        if (lastLoadedTrace.value && !renderer.value.trace) {
+                            renderer.value.loadTrace(lastLoadedTrace.value);
+                        }
+                    }
+                });
+            } else if (isPlaying.value) {
+                // Switching away from the interactive renderer should stop playback.
+                try {
+                    renderer.value && renderer.value.pause();
+                } catch (e) {
+                }
+                isPlaying.value = false;
+            }
 
             if (typeof gsap !== 'undefined') {
                 const box = document.getElementById('render-mode-description');
@@ -352,8 +413,10 @@ createApp({
                     selectedSample.value = samples.value[0];
                     // Initialize renderer after DOM update
                     nextTick(() => {
-                        initRenderer(null); // Init empty
-                        loadSample();      // Load data
+                        if (activeRenderMode.value === 'three') {
+                            initRenderer(null);
+                        }
+                        loadSample();
                     });
                 }
                 
@@ -793,6 +856,7 @@ createApp({
 
         return {
             samples,
+            filteredSamples,
             allVideos,
             selectedSample,
             pipelineDemos,
