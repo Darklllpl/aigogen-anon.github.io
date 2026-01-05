@@ -134,10 +134,20 @@
         <nav class="fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent" :class="{'bg-dark/80 backdrop-blur-xl border-white/5 shadow-2xl': scrolled, 'bg-transparent': !scrolled}">
             <div class="container mx-auto px-6 py-4 flex justify-between items-center">
                 <div class="text-2xl font-bold tracking-tighter text-glow">Algo<span class="text-primary drop-shadow-[0_0_8px_rgba(76,175,80,0.6)]">Gen</span></div>
-                <div class="hidden md:flex space-x-8 text-sm font-medium">
-                    <a href="#pipeline" class="hover:text-primary transition">Methodology</a>
-                    <a href="#interactive" class="hover:text-primary transition">Interactive Demo</a>
-                    <a href="#gallery" class="hover:text-primary transition">Gallery</a>
+                <div class="flex items-center gap-6">
+                    <div class="hidden md:flex space-x-8 text-sm font-medium">
+                        <a href="#pipeline" class="hover:text-primary transition">Methodology</a>
+                        <a href="#interactive" class="hover:text-primary transition">Interactive Demo</a>
+                        <a href="#gallery" class="hover:text-primary transition">Gallery</a>
+                    </div>
+                    <a
+                        href="https://anonymous.4open.science/r/algogen_anonymous-1E7C/README.md"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="px-6 py-3 bg-white text-slate-900 rounded-xl font-bold text-lg hover:bg-white/90 transition shadow-lg"
+                    >
+                        Code
+                    </a>
                 </div>
             </div>
         </nav>
